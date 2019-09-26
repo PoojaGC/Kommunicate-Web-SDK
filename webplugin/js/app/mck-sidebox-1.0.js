@@ -2486,13 +2486,87 @@ var CURRENT_GROUP_DATA={};
                             warningText.innerHTML += '<span> | </span><span id="mck-char-count"></span>';
                         }
                         var remtxt;
-                        var str = ($mck_text_box.text().toString()).trim();
-                        var len = str.length;
-                        if (len > 199) {
-                            if (len > 256) {
-                                remtxt = "(" + MCK_LABELS['limit.remove'] + " " + (len - 256) + " " + MCK_LABELS['limit.characters'] + ")";
+                        var str = mckUtils.textVal(textBox);
+                        var newstr = str.trim();
+                        var textLength = newstr.length;
+                        if (textLength > warningLength) {
+                            var caretObject = _this.cursorPosition(textBox);
+                            var nodeOffset = caretObject.position;
+                            var caretPosition = caretObject.totalLength;
+                            var caretNode = caretObject.node;
+                            if (textLength > maxLength) {
+                                _this.disableSendButton(true);
+                                var selection;
+                                remtxt = "(" + MCK_LABELS['limit.remove'] + " " + (textLength - maxLength) + " " + MCK_LABELS['limit.characters'] + ")";
+                                var preSpanContent = str.slice(0,maxLength);
+                                preSpanContent = preSpanContent.replace(/(?:\r\n|\r|\n)/g, '<br>');
+                                var spanContent = str.slice(maxLength);
+                                spanContent = spanContent.replace(/(?:\r\n|\r|\n)/g, '<br>');
+                                var warningSpan = document.getElementById('mck-text-warning-span');
+                                var normalSpan = document.getElementById('mck-normal-span');
+                                if (warningSpan && !(event.type == 'paste')) {
+                                    selection = document.getSelection();
+                                    if (caretPosition <= (maxLength + 1) && (selection.focusNode != warningSpan.firstChild)) {
+                                        warningSpan.innerHTML = spanContent;
+                                        normalSpan.innerHTML = preSpanContent;
+                                        selection = document.getSelection();
+                                        if(caretPosition >= maxLength + 1) {
+                                            targetNode = warningSpan.childNodes[caretNode - (normalSpan.childNodes.length - 1)];
+                                            if(caretPosition > maxLength) {
+                                                nodeOffset = caretPosition - maxLength;
+                                            }
+                                        }
+                                        else {
+                                            targetNode = normalSpan.childNodes[caretNode];
+                                        }
+                                        selection.collapse(targetNode,nodeOffset);
+                                    }
+                                } else {
+                                    textBox.innerHTML = '<span id = "mck-normal-span"></span><span contenteditable="true" id="mck-text-warning-span"></span>';
+                                    normalSpan = document.getElementById('mck-normal-span');
+                                    normalSpan.innerHTML = preSpanContent;
+                                    warningSpan = document.getElementById('mck-text-warning-span');
+                                    warningSpan.innerHTML = spanContent;
+                                    selection = document.getSelection();
+                                    var targetNode;
+                                    if(caretNode == 0 && caretPosition > maxLength) {
+                                        targetNode = warningSpan.firstChild;
+                                        nodeOffset = caretPosition-maxLength;
+                                    } else {
+                                        if (caretPosition > maxLength) {
+                                            targetNode = warningSpan.childNodes[caretNode - (normalSpan.childNodes.length - 1)];
+                                            if (nodeOffset > targetNode.nodeValue.length) {
+                                                nodeOffset = caretPosition-maxLength;
+                                            }
+                                        }
+                                        else {
+                                            targetNode = normalSpan.childNodes[caretNode];
+                                        }
+                                    }
+                                    selection.collapse(targetNode,nodeOffset);
+                                
+                                }
                             } else {
-                                remtxt = "(" + (256 - len) + " " + MCK_LABELS['limit.characters'] + " " + MCK_LABELS['limit.remaining'] + ")";
+                                normalSpan = document.getElementById('mck-normal-span');
+                                warningSpan = document.getElementById('mck-text-warning-span');
+                                var spanRemains = '';
+                                if (normalSpan) {
+                                    spanRemains = normalSpan.innerHTML;
+                                }
+                                if (warningSpan) {
+                                    spanRemains += warningSpan.innerHTML;
+                                }
+                                if (spanRemains.length > 1) {
+                                    textBox.innerHTML = spanRemains;
+                                    selection = document.getSelection();
+                                    if (caretPosition > maxLength) {
+                                        selection.collapse(textBox.lastChild,textBox.lastChild.length - 1);
+                                    } else {
+                                        selection.collapse(textBox.childNodes[caretNode],nodeOffset);
+                                    }
+                                }
+                                _this.disableSendButton(false);
+                                remtxt = "(" + (maxLength - textLength) + " " + MCK_LABELS['limit.characters'] + " " + MCK_LABELS['limit.remaining'] + ")";
                             }
                             document.getElementById('mck-char-count').innerHTML = remtxt;
                             warningBox.classList.remove("n-vis");
