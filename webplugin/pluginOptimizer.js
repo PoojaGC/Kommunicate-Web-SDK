@@ -121,7 +121,8 @@ const compressAndOptimize = () => {
         ],
         options: {
             compress: {
-                drop_console: true
+                drop_console: true,
+                ecma: 6
             }
         },
         output: path.resolve(__dirname, `${buildDir}/kommunicate-plugin.${version}.min.js`),
