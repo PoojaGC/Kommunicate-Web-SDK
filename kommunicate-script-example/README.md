@@ -1,6 +1,6 @@
 # Readme
 
-## This demo is for making the chat widget full screen or adding it inside a container.
+## This demo is for making the chat widget full screen or adding it inside a container
 
 
 ### Make widget fullscreen
